@@ -1,38 +1,41 @@
-import { type User, type InsertUser } from "@shared/schema";
+import { registrations, type Registration, type InsertRegistration } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
-// modify the interface with any CRUD methods
-// you might need
-
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  createRegistration(registration: InsertRegistration): Promise<Registration>;
+  getRegistrations(): Promise<Registration[]>;
+  getRegistration(id: string): Promise<Registration | undefined>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
-  }
-
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
+export class DatabaseStorage implements IStorage {
+  async createRegistration(insertRegistration: InsertRegistration): Promise<Registration> {
     const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+    const [registration] = await db
+      .insert(registrations)
+      .values({
+        ...insertRegistration,
+        id,
+      })
+      .returning();
+    return registration;
+  }
+
+  async getRegistrations(): Promise<Registration[]> {
+    return await db
+      .select()
+      .from(registrations)
+      .orderBy(desc(registrations.createdAt));
+  }
+
+  async getRegistration(id: string): Promise<Registration | undefined> {
+    const [registration] = await db
+      .select()
+      .from(registrations)
+      .where(eq(registrations.id, id));
+    return registration || undefined;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
