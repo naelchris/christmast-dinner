@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar, MapPin, Gift, Sparkles, Loader2, ExternalLink } from "lucide-react";
+import { Calendar, MapPin, Gift, Sparkles, Loader2, ExternalLink, PartyPopper } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,14 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import posterImage from "@assets/fe8ae479-bddf-4f21-88ba-aa27d99ae26f_1765506337420.jpeg";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const GOOGLE_FORM_ID = "1MoGI5vO1x-T-2IHf7jkkULEnUUZVfCLH6V3k0Yvh_nc";
 const GOOGLE_FORM_ACTION = `https://docs.google.com/forms/d/${GOOGLE_FORM_ID}/formResponse`;
@@ -77,6 +85,7 @@ export default function Home() {
   const [proofPreview, setProofPreview] = useState<string | undefined>(undefined);
   const [proofUploadLink, setProofUploadLink] = useState<string | undefined>(undefined);
   const [proofUploading, setProofUploading] = useState(false);
+  const [showThankYou, setShowThankYou] = useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -157,6 +166,7 @@ export default function Home() {
         description: "Your RSVP was sent to Google Forms. You can open the form to double-check.",
       });
 
+      setShowThankYou(true);
       form.reset({
         name: "",
         phoneNumber: "",
@@ -665,6 +675,27 @@ export default function Home() {
                         )}
                       </Button>
                     </div>
+
+                    <Dialog open={showThankYou} onOpenChange={setShowThankYou}>
+                      <DialogContent className="bg-gradient-to-b from-emerald-50 via-white to-rose-50 border-none">
+                        <DialogHeader className="space-y-3">
+                          <div className="mx-auto h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
+                            <PartyPopper className="h-6 w-6 text-red-600" />
+                          </div>
+                          <DialogTitle className="text-center text-2xl font-display">
+                            Thank you for registering!
+                          </DialogTitle>
+                          <DialogDescription className="text-center text-base">
+                            We have recorded your RSVP. You can also open the Google Form to review your answers.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter className="sm:justify-center gap-2">
+                          <Button variant="outline" onClick={() => setShowThankYou(false)}>
+                            Close
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                   </form>
                 </Form>
               </div>
